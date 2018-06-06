@@ -2,58 +2,90 @@
 
 This is a brief overview of how a user will interact with the tool and how this ties in to the various components defined above:
 
-### Deciding on a risk measure
-This is where the users interact with the first frontend component "Risk measure selection". A list of different risk measure models with a brief description of each will be available to users, who can then select one of these.
+### Building a list of portfolios (asset allocation models)
+The tab 'Portfolios' contains various inputs that the user can update to construct a list of different portfolios. Users
+can update the initial investment amount, the time period of investment, the weights of various stocks/bonds in their
+portfolios and the portfolio re-balancing frequency. Users can also visualize the pre-loaded asset data in order to help them decide what portfolios to test.
 
-### Selecting a list of portfolio (asset allocation models) for the chosen risk measure
-Users interact with the second frontend component "Asset allocation model selection" where from a list of different portfolios, they can select which ones they wish to compare.
+### Deciding on a risk and return measures
+The risk and return measures used in the calculations can be experimented with. Users can select a Risk measure (probability of return below a threshold or standard deviation of returns) and Return measure (change in log value or change in percentage). Additional options in this page include a threshold for the rate of return, a frequency at which to measure return and if to use annualized measures of risk and return.
 
-### Selecting a time period to view returns and risk
-Here the users interact with the third frontend component where they select the time period (in years) over which they wish to see returns vs. risk for the preselected combinations of risk measure and portfolios.
+### Graphing
+Once all the inputs are configured, the Risk-return tab of the UI shows a graph of all the portfolios. Each portfolio
+is a single point and represents the risk/return over the time period selected in the portfolio configuration tab.
 
 ### Seeing how choice of risk measure affects asset allocation decisions
-In the background, the user inputs will interact with all the backend components, returning a list of values to the frontend graph component which presents a plot of risk vs. reward to the user.
+The user can change the risk/return measures using the inputs on the page and re-render the graph.
 
 ### Seeing how well past risk and returns predict future risk and returns
-The user interacts with the third front-end component where they graph the relationship between risk and return, but restrict the data source to a certain time period in the past. This allows them to compare (for example) the results if they had run the same query 20 years ago to the results today, and gives a sense of how uncertain the risk and reward levels shwon by our tool are.
+The user can go back to the previous tab and modify their set of portfolios and restrict the data source to a certain time period in the past. This allows them to compare (for example) the results if they had run the same query 20 years ago to the results today, and gives a sense of how uncertain the risk and reward levels shown by our tool are.
 
 # Overview
 ![Interaction diagram](https://raw.githubusercontent.com/viv-r/asset-allocation/master/doc/components_diagram.jpg)
 
 # Components
-## Database containing data of stock, bonds, inflation and other market data sources.
 ## Frontend components:
    Short descriptions of what each risk measure does
    List of portfolios to display on the graph
-   ### Input components:
-        - Risk measure selection dropdown menu
-        - Check boxes to allow selection of multiple portfolios
-        - Time period selection (possibly as a slider on graph)
-   ### Graphs
-        - Plot of risk vs reward.
+   ### Tab 1: Introduction:
+      - A dash markdown component showing the readme file.
+
+   ### Tab 2: Portfolios:
+      - A tab containing the configuration for each portfolio
+        that the user wants to see on the risk-return plot.
+      - Each group of inputs represents a portfolio
+      - A portfolio has the following input components.
+         - Portfolio name text input
+         - The initial investment amount
+         - Re-balancing time period
+         - Start and end dates
+         - A list of investment classes (assets)
+      - Each investment class contains a single asset and it's weight in the portfolio.
+
+   ### Tab 3: Risk return graph:
+      - Inputs that specify the type of risk/reward metric to be
+        used in calculating the co-ordinates of the data points
+          - Measure of return: (log change or percent change)
+          - Measure of risk: (probability or standard deviation)
+          - Period of return to use for risk measure
+          - Threshold rate of return
+          - Frequency to measure return
+          - If to use annualized return for risk/reward.
+        - A plotly graph component showing the final plot.
+        
+   ### Tab 4: Dataset visualization:
+      - Allows user to visualize the raw investment class data.
+
+![Interaction diagram](https://raw.githubusercontent.com/viv-r/asset-allocation/master/doc/frontend.png)
+
 ## Backend components:
-   ### Data processing and setup:
-     - Description:
-       - Populates the DB with data from multiple CSV files.
-       - Pre-processing and cleaning the raw data.
-     - Inputs:
-       - CSV files
-     - Outpus:
-       - None
    ### Data loader:
      - Description:
-       - Opens a connection to the database.
-       - Constructs a query to fetch the required data.
-     - Inputs: Fields to fetch from the data (time period, stock/bond name, etc.)
-     - Outputs: Rows from the DB
-   ### A function to calculate Risk/Reward values:
+       - Loads the CSV data files into the app.
+       - Pre-processes and cleans the raw data.
+     - Inputs:
+       - CSV files
+     - Outputs:
+       - Data frame for each investment class
+   ### Risk and reward calculator:
      - Description:
-        - Call the data loader component.
-        - Calculates the output.
-     - Inputs: the user selection from the frontend
-     - Outputs: List of data points to be plotted.
-   ### Probabilistic model of future performance based on past:
+        - Calculates number of shares of each investment class based on user input from the frontend.
+        - Combines data frames for different investment classes into a single portfolio.
+        - Calculates risk and reward on the portfolio over the given time period.
+     - Inputs: Data frames for individual investment classes
+     - Outputs: Risk and reward values
+   ### Graphing function:
      - Description:
-        - Calculates output of risk/reward value function as if it had been run at many different times in the past.
-     - Inputs: user selection from the front end
-     - Outputs: a measure of how robust the risk/reward measures are over different time periods
+        - Bundles many portfolios together.
+        - Calculates the same measure of risk and reward on each portfolio.
+        - Exports a set of points to be graphed.
+     - Inputs: Set of portfolios and graph parameters
+     - Outputs: Set of points to be graphed
+   ### User input - backend translator:
+     - Description:
+        - Translates user input into data frames, then calls graphing function to send data back to frontend.
+        - Flow: Frontend --> backend --> frontend
+     - Inputs: User-defined portfolios and parameters
+     - Outputs: Set of points to be graphed
+
+![Interaction diagram](https://raw.githubusercontent.com/viv-r/asset-allocation/master/doc/backend.png)
